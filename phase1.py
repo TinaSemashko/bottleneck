@@ -82,13 +82,58 @@ erp_clean["stock_status"] = np.where(
     erp_clean["stock_quantity"] == 0, "outofstock", "instock"
 )
 
-print(erp_clean)
+# print(erp_clean.describe())
 
+liaison_clean = liaison[~liaison["id_web"].isna()]
 
-# print("web_dupl_sku:", web["sku"].duplicated().sum())
-# print("web_dupl:", web.duplicated().sum())
-# print("web_nan:", web.isna().sum())
+# print(liaison_clean.describe())
 
-# print("liaison_dupl_id:", liaison["product_id"].duplicated().sum())
-# print("liaison_dupl:", liaison.duplicated().sum())
-# print("liaison_nan:", liaison.isna().sum())
+web_clean1 = web[~web["sku"].isna()]
+
+web_clean2 = web_clean1.dropna(axis=1, how="all")
+
+mask_web_err = web_clean2["total_sales"] < 0
+df_temp = pd.DataFrame(
+    {
+        "table_source": "web",
+        "colonne": "total_sales",
+        "valeur": web_clean2[mask_web_err]["total_sales"],
+        "type_erreur": "Valeurs négatives dans total_sales",
+        "index_original": web_clean2[mask_web_err].index,
+    }
+)
+
+df_errors = pd.concat([df_errors, df_temp])
+df_errors = df_errors.reset_index(drop=True)
+df_errors["id_erreur"] = df_errors.index + 1
+df_errors.to_excel("./output/erreurs.xlsx", index=False)
+
+web_clean3 = web_clean2[~mask_web_err]
+
+# mask_dupl_sku = web_clean["sku"].duplicated(keep=False)
+# print(web_clean["sku"].value_counts()[web_clean["sku"].value_counts() > 1])
+
+web_clean = web_clean3[web_clean3["post_type"] == "product"]
+
+# print(web_clean.describe())
+
+df_summary1 = pd.merge(
+    erp_clean, liaison_clean, left_on="product_id", right_on="product_id", how="inner"
+)
+df_summary = pd.merge(
+    df_summary1, web_clean, left_on="id_web", right_on="sku", how="inner"
+)
+
+# print(df_summary.shape)
+# print(df_summary.columns.tolist())
+# print(web_clean[web_clean["sku"].astype(str).str.contains("cadeau|13127|14680")])
+
+mask_sku_numerique = df_summary["sku"].astype(str).str.isnumeric()
+df_summary_clean = df_summary[mask_sku_numerique]
+
+# print(
+#     df_summary_clean[
+#         df_summary_clean["sku"].astype(str).str.contains("cadeau|13127|14680")
+#     ]
+# )
+df_summary_clean.to_excel("./output/summary.xlsx", index=False)
