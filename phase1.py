@@ -90,7 +90,7 @@ liaison_clean = liaison[~liaison["id_web"].isna()]
 
 web_clean1 = web[~web["sku"].isna()]
 
-web_clean2 = web_clean1.dropna(axis=1, how="all")
+web_clean2 = web_clean1.dropna(axis=1, how="all")  # empty columns
 
 mask_web_err = web_clean2["total_sales"] < 0
 df_temp = pd.DataFrame(
