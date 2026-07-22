@@ -110,7 +110,7 @@ df_errors.to_excel("./output/erreurs.xlsx", index=False)
 
 web_clean3 = web_clean2[~mask_web_err]
 
-
+# images duplicates
 web_clean = web_clean3[web_clean3["post_type"] == "product"]
 
 # print(web_clean.describe())
@@ -129,9 +129,4 @@ df_summary = pd.merge(
 mask_sku_numerique = df_summary["sku"].astype(str).str.isnumeric()
 df_summary_clean = df_summary[mask_sku_numerique]
 
-# print(
-#     df_summary_clean[
-#         df_summary_clean["sku"].astype(str).str.contains("cadeau|13127|14680")
-#     ]
-# )
 df_summary_clean.to_excel("./output/summary.xlsx", index=False)
